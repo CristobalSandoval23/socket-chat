@@ -3,29 +3,51 @@ var params = new URLSearchParams(window.location.search);
 var nombre = params.get('nombre');
 var sala = params.get('sala');
 
-var divUsuarios = $('#divUsuarios');
-var formEnviar = $('#formEnviar');
-var txtMensaje = $('#txtMensaje');
-var divChatbox = $('#divChatbox');
+var divUsuarios = document.querySelector("#divUsuarios")
+var formEnviar = document.querySelector("#formEnviar")
+var txtMensaje = document.querySelector("#txtMensaje")
+var divChatbox = document.querySelector("#divChatbox")
+var openPanel = document.querySelector(".open-panel")
+var chatLeftAside = document.querySelector(".chat-left-aside")
+
 
 function renderizarUsuarios(personas){
 
     var html = '';
 
-
-html += '<li>';
-html += '    <a href="javascript:void(0)" class="active"> Chat de <span> '+ sala+' </span></a>';
-html += '</li>';
-
-for (let index = 0; index < personas.length; index++) {
-    
     html += '<li>';
-    html += '    <a data-id="'+ personas[index].id+'" href="javascript:void(0)"><img src="assets/images/users/1.jpg" alt="user-img" class="img-circle"> <span>'+personas[index].nombre+'<small class="text-success">online</small></span></a>';
+    html += '    <a href="javascript:void(0)" class="active"> Chat de <span> '+ sala+' </span></a>';
     html += '</li>';
+
+    for (let index = 0; index < personas.length; index++) {
+        
+        html += '<li>';
+        html += '    <a data-id="'+ personas[index].id+'" href="javascript:void(0)"><img src="assets/images/users/1.jpg" alt="user-img" class="img-circle"> <span>'+personas[index].nombre+'<small class="text-success">online</small></span></a>';
+        html += '</li>';
+    }
+
+divUsuarios.innerHTML = html;
 }
 
-divUsuarios.html(html)
-}
+openPanel.addEventListener('click', ()=>{
+    
+    var clase = openPanel.firstElementChild.className; 
+    if(clase === 'ti-angle-right'){
+        
+        chatLeftAside.style.zIndex = "10"
+        chatLeftAside.style.left = "5%"
+        chatLeftAside.style.width = "90%"
+        openPanel.firstElementChild.classList.replace('ti-angle-right', 'ti-angle-left')
+        
+    }else{
+        
+        chatLeftAside.style.zIndex = "1"
+        chatLeftAside.style.left = "0"
+        chatLeftAside.style.width = "0"
+        openPanel.firstElementChild.classList.replace('ti-angle-left', 'ti-angle-right')
+    }
+
+})
 
 
 function renderizarMensajes(mensaje, yo = true){
@@ -62,50 +84,50 @@ function renderizarMensajes(mensaje, yo = true){
         html += '    <div class="chat-time">'+hora+'</div>';
         html += '</li>';
     }
-
-
-
-
-    divChatbox.append(html)
+    divChatbox.insertAdjacentHTML("beforeend", html);
 }
+
+divChatbox.addEventListener('scroll', (e)=>{
+
+    
+})
+
 
 function scrollBottom() {
 
-    // selectors
-    var newMessage = divChatbox.children('li:last-child');
-
+    var newMessage = divChatbox.lastElementChild;
     // heights
-    var clientHeight = divChatbox.prop('clientHeight');
-    var scrollTop = divChatbox.prop('scrollTop');
-    var scrollHeight = divChatbox.prop('scrollHeight');
-    var newMessageHeight = newMessage.innerHeight();
-    var lastMessageHeight = newMessage.prev().innerHeight() || 0;
-
-    if (clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight) {
-        divChatbox.scrollTop(scrollHeight);
+    var clientHeight = divChatbox.clientHeight;
+    var scrollTop = divChatbox.scrollTop;
+    var scrollHeight = divChatbox.scrollHeight;
+    var newMessageHeight = newMessage.scrollHeight;
+    var lastMessageHeight = newMessage.scrollHeight;
+    var altura = clientHeight + scrollTop + newMessageHeight + lastMessageHeight
+    if ( altura >= scrollHeight) {
+        divChatbox.scrollTop  = scrollHeight;
     }
 }
 
-divUsuarios.on('click', 'a', function(){
-    var id = $(this).data('id');
+divUsuarios.addEventListener('click', (e)=>{
+    var id = e.target.closest("a").dataset;
 
     if(id){
         console.log(id)
+
     }
 })
-formEnviar.on('submit', function(e){
+formEnviar.addEventListener('submit', (e)=>{
 
     e.preventDefault();
 
-    if(txtMensaje.val().trim().length === 0){
+    if (txtMensaje.value.length === 0) {
         return;
     }
-
     socket.emit('crearMensaje', {
             nombre,
-            mensaje: txtMensaje.val()
+            mensaje: txtMensaje.value
         }, function(mensaje) {
-            txtMensaje.val('').focus();
+            txtMensaje.value = '';
             renderizarMensajes(mensaje);
             scrollBottom();
         });
